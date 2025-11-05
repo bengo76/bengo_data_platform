@@ -24,7 +24,6 @@ import subprocess
 import platform
 import time
 from pathlib import Path
-from dotenv import load_dotenv
 
 def run_command(command, description, shell=False):
     """Run a command and handle errors"""
@@ -107,8 +106,14 @@ def setup_virtual_environment():
         print("❌ Failed to create virtual environment")
         return False
 
-def load_environment_variables():
+def load_environment():
     """Load environment variables from .env file"""
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        print("❌ python-dotenv not installed, skipping .env loading")
+        return False
+        
     env_file = Path(".env")
     if env_file.exists():
         load_dotenv(".env")
@@ -120,8 +125,12 @@ def load_environment_variables():
 
 def get_dbt_environment():
     """Get environment variables for dbt commands including .env file variables"""
-    # Load .env file variables
-    load_dotenv(".env")
+    try:
+        from dotenv import load_dotenv
+        # Load .env file variables
+        load_dotenv(".env")
+    except ImportError:
+        print("⚠️ python-dotenv not available, using system environment only")
     
     # Create environment with both system and .env variables
     env = dict(os.environ)
