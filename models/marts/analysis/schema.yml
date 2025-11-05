@@ -1,0 +1,445 @@
+version: 2
+
+models:
+  - name: analysis_metrics_dashboard
+    description: "Cross-functional business intelligence dashboard combining customer, order, and product metrics with health scoring and trend analysis for executive reporting and business monitoring"
+    columns:
+      - name: metric_date
+        description: "Date for daily metric analysis"
+        tests:
+          - unique
+          - not_null
+      - name: date_key
+        description: "Integer date key for dimension table joins (YYYYMMDD format)"
+      - name: year_month
+        description: "Year-month string for aggregation (YYYY-MM format)"
+      - name: metric_year
+        description: "Metric year for time series analysis"
+      - name: metric_month
+        description: "Metric month for seasonal analysis"
+      
+      # === CORE BUSINESS METRICS ===
+      - name: active_customers
+        description: "Number of customers who placed orders on this date"
+      - name: new_customers_acquired
+        description: "Number of new customer signups on this date"
+      - name: total_orders
+        description: "Total number of orders placed"
+      - name: completed_orders
+        description: "Number of successfully completed orders"
+      - name: total_revenue
+        description: "Total revenue from all orders"
+      - name: completed_revenue
+        description: "Revenue from completed orders only"
+      - name: avg_order_value
+        description: "Average order value for the day"
+      - name: unique_products_sold
+        description: "Number of distinct products sold"
+      
+      # === CUSTOMER INSIGHTS ===
+      - name: customer_acquisition_rate_pct
+        description: "Daily customer acquisition rate as percentage of active customers"
+      - name: customer_completion_rate_pct
+        description: "Percentage of customers who completed their orders"
+      - name: revenue_per_active_customer
+        description: "Average revenue generated per active customer"
+      - name: avg_orders_per_active_customer
+        description: "Average number of orders per active customer"
+      - name: premium_core_customer_pct
+        description: "Percentage of premium and core customers among active customers"
+      - name: customer_order_conversion_pct
+        description: "Percentage of active customers who actually placed orders"
+      
+      # === ORDER & PRODUCT INSIGHTS ===
+      - name: order_completion_rate_pct
+        description: "Percentage of orders that were completed successfully"
+      - name: order_cancellation_rate_pct
+        description: "Percentage of orders that were cancelled"
+      - name: order_refund_rate_pct
+        description: "Percentage of orders that were refunded"
+      - name: overall_fulfillment_rate_pct
+        description: "Overall order fulfillment success rate"
+      - name: products_per_order_ratio
+        description: "Average number of unique products per order"
+      - name: product_variety_pct
+        description: "Product variety percentage in order lines"
+      - name: premium_luxury_revenue_pct
+        description: "Percentage of revenue from premium and luxury products"
+      - name: weekend_order_pct
+        description: "Percentage of orders placed on weekends"
+      
+      # === REVENUE INSIGHTS ===
+      - name: net_revenue_success_pct
+        description: "Net revenue success rate after accounting for cancellations and refunds"
+      - name: completed_revenue_per_ordering_customer
+        description: "Completed revenue per customer who placed orders"
+      - name: avg_unit_price
+        description: "Average unit price of products sold"
+      - name: clothing_revenue_pct
+        description: "Percentage of revenue from clothing category"
+      - name: accessories_revenue_pct
+        description: "Percentage of revenue from accessories category"
+      - name: footwear_revenue_pct
+        description: "Percentage of revenue from footwear category"
+      
+      # === GROWTH & TRENDS ===
+      - name: customer_growth_vs_7d_avg_pct
+        description: "Customer growth percentage vs 7-day average"
+      - name: revenue_growth_vs_7d_avg_pct
+        description: "Revenue growth percentage vs 7-day average"
+      - name: order_growth_vs_7d_avg_pct
+        description: "Order growth percentage vs 7-day average"
+      - name: avg_active_customers_7d
+        description: "7-day rolling average of active customers"
+      - name: avg_revenue_7d
+        description: "7-day rolling average revenue"
+      - name: avg_orders_7d
+        description: "7-day rolling average order count"
+      
+      # === HEALTH SCORING SYSTEM ===
+      - name: customer_health_score
+        description: "Customer health score (0-25) based on acquisition, completion, and premium customer rates"
+      - name: order_health_score
+        description: "Order health score (0-25) based on fulfillment rate, AOV, and cancellation rate"
+      - name: revenue_health_score
+        description: "Revenue health score (0-25) based on net success rate, per-customer revenue, and premium mix"
+      - name: growth_health_score
+        description: "Growth health score (0-25) based on customer, revenue, and order growth trends"
+      - name: business_health_score
+        description: "Overall business health score (0-100) combining all health dimensions"
+      - name: business_health_grade
+        description: "Business health grade: A+ Excellent (90+), A Good (80+), B+ Above Average (70+), B Average (60+), C+ Below Average (50+), C Poor (40+), D Critical (<40)"
+      
+      # === ALERTS & OPPORTUNITIES ===
+      - name: primary_alert
+        description: "Primary business alert: HIGH_CANCELLATION (>25%), LOW_ACQUISITION (<1%), LOW_FULFILLMENT (<70%), REVENUE_DECLINE (<-15%), CUSTOMER_DECLINE (<-15%)"
+      - name: primary_opportunity
+        description: "Primary business opportunity: UPSELL_OPPORTUNITY (low premium %), CONVERSION_OPPORTUNITY (low conversion %), CROSS_SELL_OPPORTUNITY (low variety %), WEEKEND_GROWTH_OPPORTUNITY (low weekend %)"
+      
+      - name: analysis_updated_at
+        description: "Timestamp when this analysis was last updated"
+
+  - name: analysis_customer_behavior
+    description: "Advanced customer behavioral segmentation and purchase pattern analysis for marketing and retention strategies"
+    columns:
+      - name: customer_key
+        description: "Surrogate key for customer dimension table linkage"
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "Natural key - original customer identifier from source system"
+      - name: total_orders
+        description: "Total number of orders placed by customer (all statuses)"
+      - name: completed_orders
+        description: "Number of successfully completed orders by customer"
+      - name: active_months
+        description: "Number of distinct months in which customer placed orders"
+      - name: first_purchase_date
+        description: "Date of customer's first order"
+      - name: last_purchase_date
+        description: "Date of customer's most recent order"
+      - name: customer_lifespan_days
+        description: "Number of days between first and last purchase"
+      - name: days_since_last_purchase
+        description: "Number of days since customer's last order (recency metric)"
+      - name: total_spent
+        description: "Total amount spent by customer across all orders"
+      - name: total_completed_spent
+        description: "Total amount spent by customer on completed orders only"
+      - name: avg_order_value
+        description: "Average order value across all customer orders"
+      - name: min_order_value
+        description: "Smallest order value placed by customer"
+      - name: max_order_value
+        description: "Largest order value placed by customer"
+      - name: total_items_purchased
+        description: "Total number of line items across all customer orders"
+      - name: avg_items_per_order
+        description: "Average number of line items per order"
+      - name: weekend_orders
+        description: "Number of orders placed on weekends (Saturday/Sunday)"
+      - name: weekday_orders
+        description: "Number of orders placed on weekdays (Monday-Friday)"
+      - name: winter_orders
+        description: "Number of orders placed in winter months (Dec, Jan, Feb)"
+      - name: spring_orders
+        description: "Number of orders placed in spring months (Mar, Apr, May)"
+      - name: summer_orders
+        description: "Number of orders placed in summer months (Jun, Jul, Aug)"
+      - name: fall_orders
+        description: "Number of orders placed in fall months (Sep, Oct, Nov)"
+      - name: unique_products_purchased
+        description: "Number of distinct products purchased by customer"
+      - name: unique_categories_purchased
+        description: "Number of distinct product categories purchased"
+      - name: unique_category_groups_purchased
+        description: "Number of distinct category groups purchased"
+      - name: avg_price_preference
+        description: "Average price of products purchased by customer"
+      - name: preferred_category_group
+        description: "Most frequently purchased category group"
+      - name: premium_purchases
+        description: "Number of premium-tier products purchased"
+      - name: limited_edition_purchases
+        description: "Number of limited edition products purchased"
+      - name: total_quantity_purchased
+        description: "Total quantity of items purchased across all orders"
+      - name: avg_quantity_per_line
+        description: "Average quantity per line item"
+      - name: single_line_orders
+        description: "Number of orders containing only one line item"
+      - name: dominant_line_purchases
+        description: "Number of purchases where one line dominates the order value"
+      - name: purchase_frequency_monthly
+        description: "Average number of orders per month (orders/lifespan)"
+      - name: product_exploration_ratio
+        description: "Ratio of unique products to total orders (variety seeking behavior)"
+      - name: weekend_preference_pct
+        description: "Percentage of orders placed on weekends"
+      - name: premium_preference_pct
+        description: "Percentage of purchases that are premium products"
+      - name: behavioral_segment
+        description: "RFM-based behavioral segment: VIP Active (high value recent), High Value Active, Regular Active, Moderate Active, Low Active, One-Time Customer, Inactive"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['VIP Active', 'High Value Active', 'Regular Active', 'Moderate Active', 'Low Active', 'One-Time Customer', 'Inactive']
+      - name: purchase_pattern
+        description: "Product variety seeking pattern: Explorer (80%+ unique), Variety Seeker (50%+), Moderate Repeater (30%+), Brand Loyal (20%+), Highly Loyal (<20%)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Explorer', 'Variety Seeker', 'Moderate Repeater', 'Brand Loyal', 'Highly Loyal']
+      - name: engagement_level
+        description: "Long-term engagement classification based on active months and purchase frequency"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Highly Engaged', 'Engaged', 'Moderately Engaged', 'Low Engagement', 'Single Purchase']
+      - name: value_tier
+        description: "Customer value tier based on total completed spending: Platinum ($2000+), Gold ($1000+), Silver ($500+), Bronze ($100+), Entry (<$100)"
+      - name: timing_preference
+        description: "Shopping timing preference: Weekend Shopper (60%+ weekend), Mixed Shopper (40-60%), Weekday Shopper (<40%)"
+      - name: price_sensitivity
+        description: "Price sensitivity classification: Premium Buyer (50%+ premium), Occasional Premium (25%+), Budget Conscious (10%+), Value Seeker (<10%)"
+      - name: seasonal_preference
+        description: "Preferred shopping season based on highest order volume"
+      - name: customer_name
+        description: "Customer name from dimension table"
+      - name: region
+        description: "Customer's geographic region"
+      - name: tenure_segment
+        description: "Customer tenure classification from dimension table"
+      - name: demographic_segment
+        description: "Demographic-based customer segment from dimension table"
+      - name: marketing_persona
+        description: "Actionable marketing persona combining behavioral and value characteristics for targeted campaigns"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Premium Enthusiast', 'Engaged Explorer', 'Loyal Regular', 'Active Browser', 'Sleeping Giant', 'High-Value Trial', 'Trial Customer', 'Win-Back Target', 'Standard Customer']
+      - name: churn_risk
+        description: "Churn risk assessment based on recency, order history, and spending: Low Risk (≤60 days), Medium Risk (≤120 days, 3+ orders), High Risk (≤180 days, $200+ spent), Lost Customer (>180 days)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Low Risk', 'Medium Risk', 'High Risk', 'Lost Customer']
+      - name: analysis_updated_at
+        description: "Timestamp when this analysis was last updated"
+
+  - name: analysis_order_trends
+    description: "Comprehensive order pattern and trend analysis with seasonality, growth metrics, and performance classification for demand forecasting and business planning"
+    columns:
+      - name: trend_date
+        description: "Specific date for daily trend analysis (null for monthly aggregates)"
+      - name: period_type
+        description: "Time period granularity: Daily (individual dates) or Monthly (aggregated by month)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Daily', 'Monthly']
+      - name: trend_period
+        description: "Period identifier string - YYYY-MM-DD for daily trends, YYYY-MM for monthly aggregates"
+        tests:
+          - not_null
+      - name: period_orders
+        description: "Total number of orders placed in this time period"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: period_revenue
+        description: "Total revenue from completed orders in this period"
+      - name: period_avg_order_value
+        description: "Average order value for this period"
+      - name: period_unique_customers
+        description: "Number of unique customers who placed orders in this period"
+      - name: period_completion_rate
+        description: "Percentage of orders that were completed (vs canceled/refunded)"
+      - name: period_growth_pct
+        description: "Period-over-period growth rate percentage"
+      - name: season
+        description: "Calendar season classification for daily records"
+      - name: day_name
+        description: "Day of week name (Sunday through Saturday) for daily records"
+      - name: day_type
+        description: "Day type classification: Weekend (Sat/Sun) or Weekday (Mon-Fri)"
+      - name: special_period
+        description: "Special shopping period detection: Holiday Season (Dec 20+), Black Friday Period (Nov 20+), Valentines Period (Feb 10-20), Regular Period"
+      - name: performance_vs_7d
+        description: "Performance comparison against 7-day moving average: Above/Near/Below 7d Average"
+      - name: revenue_performance
+        description: "Revenue performance classification relative to historical patterns"
+      - name: daily_trend_pattern
+        description: "Daily trend pattern classification for identifying business cycles"
+      - name: volume_tier
+        description: "Order volume classification tier for capacity planning and resource allocation"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Very High Volume', 'High Volume', 'Medium Volume', 'Low Volume', 'Very Low Volume']
+      - name: seasonality_pattern
+        description: "Detected seasonal pattern: Winter/Spring/Summer/Fall for daily records, Monthly for aggregated records"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Winter', 'Spring', 'Summer', 'Fall', 'Monthly']
+      - name: analysis_updated_at
+        description: "Timestamp when this trend analysis was last updated"
+
+  - name: analysis_product_performance
+    description: "Comprehensive product performance analysis including sales metrics, customer behavior, pricing strategies, and lifecycle analysis for inventory optimization and product strategy"
+    columns:
+      - name: product_key
+        description: "Surrogate key for product dimension table linkage"
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        description: "Natural key - original product identifier from source system"
+        tests:
+          - not_null
+      - name: total_order_lines
+        description: "Total number of order lines containing this product"
+      - name: unique_orders
+        description: "Number of distinct orders containing this product"
+      - name: unique_customers
+        description: "Number of distinct customers who purchased this product"
+      - name: total_quantity_sold
+        description: "Total quantity of this product sold across all orders"
+      - name: total_revenue
+        description: "Total revenue generated by this product (all order statuses)"
+      - name: completed_revenue
+        description: "Revenue from completed orders only"
+      - name: refunded_revenue
+        description: "Revenue lost due to refunds"
+      - name: cancelled_revenue
+        description: "Revenue lost due to order cancellations"
+      - name: avg_line_value
+        description: "Average revenue per order line for this product"
+      - name: avg_selling_price
+        description: "Average actual selling price (may differ from catalog due to discounts)"
+      - name: avg_quantity_per_line
+        description: "Average quantity purchased per order line"
+      - name: avg_order_contribution_pct
+        description: "Average percentage this product contributes to order total"
+      - name: single_line_orders
+        description: "Number of orders where this was the only product"
+      - name: dominant_lines
+        description: "Number of times this product dominated the order value"
+      - name: major_lines
+        description: "Number of times this product was a major component of the order"
+      - name: minor_lines
+        description: "Number of times this product was a minor component of the order"
+      - name: first_sale_date
+        description: "Date of first sale for this product"
+      - name: last_sale_date
+        description: "Date of most recent sale"
+      - name: selling_days
+        description: "Number of distinct days this product was sold"
+      - name: times_first_in_order
+        description: "Number of times this product was the first item added to cart"
+      - name: avg_position_in_order
+        description: "Average position/sequence when added to cart"
+      - name: product_name
+        description: "Product name from dimension table"
+      - name: category
+        description: "Product category"
+      - name: category_group
+        description: "Product category group (higher level classification)"
+      - name: catalog_price
+        description: "Official catalog/list price"
+      - name: price_tier
+        description: "Price tier classification (Budget, Mid-Range, Premium, Luxury)"
+      - name: detailed_price_tier
+        description: "More granular price tier with Ultra-Premium option"
+      - name: price_decile
+        description: "Price decile ranking (1-10) within product catalog"
+      - name: price_quartile
+        description: "Price quartile (1-4) for relative price positioning"
+      - name: category_position
+        description: "Position ranking within category"
+      - name: is_active
+        description: "Whether product is currently active/available"
+      - name: is_limited_edition
+        description: "Whether product is limited edition"
+      - name: is_premium_line
+        description: "Whether product belongs to premium line"
+      - name: is_classic_line
+        description: "Whether product belongs to classic/core line"
+      - name: product_created_at
+        description: "When product was first created/launched"
+      - name: refund_rate_pct
+        description: "Percentage of completed revenue that was later refunded"
+      - name: completion_rate_pct
+        description: "Percentage of total revenue that completed successfully"
+      - name: price_realization_pct
+        description: "Actual selling price as percentage of catalog price (measures discounting)"
+      - name: days_since_launch
+        description: "Number of days since product launch"
+      - name: revenue_velocity_daily
+        description: "Average daily revenue generation"
+      - name: inventory_turnover_proxy
+        description: "Proxy metric for inventory turnover based on sales frequency"
+      - name: customer_acquisition_score
+        description: "Score indicating how well product attracts new customers"
+      - name: customer_retention_score
+        description: "Score indicating repeat purchase likelihood"
+      - name: revenue_rank_overall
+        description: "Overall revenue ranking across all products (1 = highest)"
+      - name: revenue_rank_category
+        description: "Revenue ranking within product category"
+      - name: quantity_rank_overall
+        description: "Overall quantity sold ranking"
+      - name: customer_reach_rank
+        description: "Ranking by number of unique customers reached"
+      - name: revenue_quartile
+        description: "Revenue performance quartile (1-4, 4 = top 25%)"
+      - name: quantity_quartile
+        description: "Quantity performance quartile"
+      - name: customer_reach_quartile
+        description: "Customer reach quartile"
+      - name: performance_tier
+        description: "Overall performance classification: Star Performer, High Performer, Steady Performer, Underperformer, Poor Performer"
+      - name: revenue_contribution_tier
+        description: "Revenue contribution classification: Top 25%, Above Average, Below Average, Bottom 25%"
+      - name: customer_penetration_tier
+        description: "Customer penetration level: High/Medium/Low/Very Low Penetration"
+      - name: lifecycle_stage
+        description: "Product lifecycle stage: New Launch (≤30 days), Early Stage (≤90), Growth Stage (≤180), Mature Stage (≤365), Established (>365)"
+      - name: pricing_strategy
+        description: "Pricing strategy classification based on price realization: Full Price (95%+), Minimal Discount (85%+), Moderate Discount (75%+), Heavy Discount (60%+), Deep Discount (<60%)"
+      - name: purchase_behavior
+        description: "Customer purchase behavior pattern: Standalone Purchase, Primary Item, Complementary Item, Add-On Item"
+      - name: analysis_updated_at
+        description: "Timestamp when this product analysis was last updated"

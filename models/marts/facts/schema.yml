@@ -1,0 +1,336 @@
+version: 2
+
+models:
+  - name: fact_orders
+    description: "Comprehensive order-level fact table containing one row per unique order with aggregated metrics for revenue analysis, customer behavior tracking, and business intelligence reporting"
+    columns:
+      - name: order_key
+        description: "Surrogate key for the order fact - unique identifier generated using dbt_utils for reliable joins and data integrity across the data warehouse"
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Natural key from source system - original order identifier from transactional systems, essential for traceability and reconciliation with source data"
+        tests:
+          - unique
+          - not_null
+      - name: customer_key
+        description: "Foreign key relationship to dim_customer table - enables customer segmentation analysis, lifetime value calculations, and customer behavior tracking across orders"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_key
+      - name: order_date_key
+        description: "Foreign key to dim_date in YYYYMMDD integer format - critical for time-series analysis, seasonal reporting, and date-based filtering with optimal performance"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: order_amount
+        description: "Total monetary value of the order including all line items - primary revenue metric for financial reporting, sales analysis, and order value distribution studies"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: total_line_items
+        description: "Count of distinct line items within the order - key metric for basket analysis, order complexity assessment, and cross-selling opportunity identification"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: total_quantity
+        description: "Sum of all item quantities across all line items in the order - indicates order volume and customer purchasing intensity for inventory and fulfillment planning"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: unique_products_count
+        description: "Count of distinct products in the order - measures product variety and shopping diversity, useful for recommendation engines and category performance analysis"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: order_status
+        description: "Current lifecycle status of the order - critical for revenue recognition, fulfillment tracking, and operational reporting (pending/completed/cancelled/refunded)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['pending', 'completed', 'cancelled', 'refunded']
+      - name: order_size_category
+        description: "Business classification based on line item count - segments orders for targeted analysis and operational optimization (Single Item/Small/Medium/Large Order)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Single Item', 'Small Order', 'Medium Order', 'Large Order']
+      - name: product_variety
+        description: "Classification of product diversity within the order - indicates shopping behavior patterns and helps identify single-product vs. multi-product purchase strategies"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['All Unique', 'Single Product', 'Mixed Products']
+      - name: order_timing
+        description: "Temporal classification indicating whether order was placed during business days or weekend - crucial for staffing optimization and customer behavior analysis"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Weekday', 'Weekend']
+      - name: order_time_of_day
+        description: "Time period classification for order placement - enables peak hour analysis, resource planning, and understanding of customer shopping patterns throughout the day"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Morning', 'Afternoon', 'Evening', 'Night']
+      - name: is_completed
+        description: "Boolean flag indicating order completion status - primary filter for revenue recognition and successful transaction analysis (true for completed orders)"
+        tests:
+          - not_null
+      - name: order_date
+        description: "Calendar date when the order was originally placed - source date field for time-based analysis and trending, stored in standard DATE format for flexibility"
+        tests:
+          - not_null
+
+  - name: fact_order_line
+    description: "Granular order line-level fact table containing one row per individual order line item - enables detailed product analysis, pricing optimization, and line-level revenue attribution"
+    columns:
+      - name: order_line_key
+        description: "Surrogate key for the order line fact - unique identifier ensuring data integrity and optimal join performance for line-level analytics and reporting"
+        tests:
+          - unique
+          - not_null
+      - name: order_line_id
+        description: "Natural key from source transactional system - original line identifier maintaining traceability to source systems for audit and reconciliation purposes"
+        tests:
+          - unique
+          - not_null
+      - name: order_key
+        description: "Foreign key establishing relationship to fact_orders - enables order-level aggregation and hierarchical analysis from line items to complete orders"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fact_orders')
+              field: order_key
+      - name: customer_key
+        description: "Foreign key to dim_customer - denormalized for performance, enables direct customer analysis at line level without requiring joins through order table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_key
+      - name: product_key
+        description: "Foreign key to dim_product - critical relationship for product performance analysis, inventory insights, and category-level revenue attribution"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_key
+      - name: order_date_key
+        description: "Foreign key to dim_date in YYYYMMDD format - denormalized for efficient time-based filtering and analysis at the line item level without requiring order table joins"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: order_id
+        description: "Natural order identifier for business user reference - maintains connection to source order systems and facilitates cross-system data validation"
+        tests:
+          - not_null
+      - name: product_id
+        description: "Natural product identifier from source systems - enables product-level analysis and maintains traceability to catalog and inventory systems"
+        tests:
+          - not_null
+      - name: customer_id
+        description: "Natural customer identifier from CRM/source systems - facilitates customer journey analysis and integration with external customer data platforms"
+        tests:
+          - not_null
+      - name: quantity
+        description: "Number of units of the specific product ordered in this line item - fundamental measure for inventory planning, demand forecasting, and volume analysis"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                inclusive: true
+      - name: unit_price
+        description: "Price per individual unit of the product at time of purchase - captures historical pricing for margin analysis, price elasticity studies, and revenue optimization"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: line_total
+        description: "Extended line amount calculated as quantity × unit_price - represents total revenue contribution of this specific line item for accurate revenue attribution and profitability analysis"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: item_sequence
+        description: "Sequential position of this line item within the parent order (1, 2, 3...) - indicates item priority and enables basket sequence analysis for cross-selling insights"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                inclusive: true
+      - name: quantity_category
+        description: "Business classification based on item quantity purchased - segments line items for volume-based analysis and bulk purchasing behavior studies"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Single Item', 'Pair', 'Multiple Items']
+      - name: line_price_tier
+        description: "Price tier classification for the unit price of this line item - enables price point analysis and product positioning assessment within the catalog"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Budget', 'Mid-Range', 'Premium', 'Luxury']
+      - name: line_value_tier
+        description: "Value tier based on the total line amount (quantity × price) - categorizes line items by revenue contribution for prioritization and analysis"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Low Value Line', 'Medium Value Line', 'High Value Line', 'Premium Value Line']
+      - name: line_percentage_of_order
+        description: "Calculated percentage that this line item contributes to the total order value - identifies dominant line items and helps understand customer purchasing focus within orders"
+        tests:
+          - not_null
+      - name: line_importance
+        description: "Business classification of line item significance within the order context - helps prioritize analysis and understand customer shopping patterns and preferences"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Single Line Order', 'Dominant Line', 'Major Line', 'Minor Line']
+      - name: order_status
+        description: "Denormalized order status from parent order - enables line-level filtering by order completion without requiring joins, critical for revenue recognition analysis"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['pending', 'completed', 'cancelled', 'refunded']
+      - name: recognized_revenue
+        description: "Revenue amount eligible for recognition based on order completion status - zero for non-completed orders, equals line_total for completed orders per accounting standards"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: is_first_line_item
+        description: "Boolean indicator for the first line item in the order sequence - useful for analyzing primary product selection and initial purchase intent patterns"
+        tests:
+          - not_null
+      - name: order_date
+        description: "Denormalized order placement date - provides direct access to transaction timing for line-level time series analysis without requiring order table joins"
+        tests:
+          - not_null
+
+  - name: fact_orders_scd2
+    description: "SCD2 Fact table tracking all order status changes over time - captures complete order lifecycle with historical status tracking and transition analytics"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - status_change_sequence
+    columns:
+      - name: order_key
+        description: "Surrogate key unique per order status change - enables tracking of order state evolution and historical analysis"
+        tests:
+          - unique
+          - not_null
+      
+      - name: order_id
+        description: "Natural order identifier"
+        tests:
+          - not_null
+      
+      - name: status_change_sequence
+        description: "Sequential number for each status change per order (1, 2, 3...)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 10
+      
+      - name: customer_key
+        description: "Foreign key to dim_customer"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_key
+      
+      - name: order_date_key
+        description: "Foreign key to dim_date for order date"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      
+      - name: status_effective_date_key
+        description: "Foreign key to dim_date for status change date"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      
+      - name: order_status
+        description: "Order status at this point in time"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['pending', 'items added', 'completed', 'cancelled', 'refunded']
+      
+      - name: is_current_status
+        description: "Flag indicating if this is the current status"
+        tests:
+          - not_null
+      
+      - name: status_effective_date
+        description: "When this status became effective"
+        tests:
+          - not_null
+      
+      - name: status_lifecycle_stage
+        description: "Lifecycle stage of this status record"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Initial', 'Historical', 'Current']
+      
+      - name: order_amount
+        description: "Total order amount"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      
+      - name: status_duration_hours
+        description: "Duration this status was active (NULL for current)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true

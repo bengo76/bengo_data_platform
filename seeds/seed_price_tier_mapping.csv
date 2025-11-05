@@ -1,0 +1,5 @@
+min_price,max_price,price_tier
+0,49.99,Budget
+50,149.99,Mid-Range
+150,399.99,Premium
+400,999999,Luxury

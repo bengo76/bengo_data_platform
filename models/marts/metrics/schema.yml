@@ -1,0 +1,233 @@
+version: 2
+
+models:
+  - name: daily_metrics
+    description: |
+      Unified daily metrics table that consolidates all business metrics into a normalized 
+      row-per-day-per-metric format using a **configuration-driven approach** for sustainability.
+      
+      **Key Features:**
+      - Configuration-driven: All metrics defined in Jinja variables for easy maintenance
+      - Sustainable architecture: New dimensions/metrics require only config updates
+      - Normalized structure with metric_name and metric_value columns
+      - Named dimensions (dimension_type/dimension_value) for easy filtering and grouping
+      - Incremental materialization for performance
+      - Unified date dimensions across all metric types
+      
+      **Data Sources:**
+      - Orders metrics from metric_daily_orders (24 metrics)
+      - Product metrics from metric_daily_products (14 metrics)  
+      - Customer metrics from metric_daily_customers (12 metrics)
+      
+      **Sustainability Benefits:**
+      - Adding new dimension values: Automatically included (no code changes)
+      - Adding new metrics: Just add to configuration arrays
+      - Changing dimension logic: Update once in config
+      - Schema evolution: Centralized management
+      
+      **Usage:**
+      This table is designed for dashboard consumption and cross-metric analysis.
+      Filter by metric_name for specific metrics, and use dimension_type/dimension_value
+      for breakdowns by status, category, segment, etc.
+
+    config:
+      materialized: incremental
+      unique_key: ['date_key', 'metric_name', 'dimension_type', 'dimension_value']
+
+    columns:
+      - name: date_key
+        description: "Surrogate key for the date dimension (YYYYMMDD format)"
+        data_type: integer
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+
+      - name: metric_date
+        description: "The date for which the metric is calculated"
+        data_type: date
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+
+      - name: year
+        description: "Year extracted from metric_date"
+        data_type: integer
+
+      - name: month  
+        description: "Month extracted from metric_date (1-12)"
+        data_type: integer
+
+      - name: quarter
+        description: "Quarter extracted from metric_date (1-4)"
+        data_type: integer
+
+      - name: year_month
+        description: "Year-month in YYYY-MM format for grouping"
+        data_type: text
+
+      - name: metric_domain
+        description: |
+          The business domain of the metric for organizational purposes:
+          - orders: Order-related metrics (volume, revenue, completion rates)
+          - products: Product-related metrics (sales, categories, inventory)
+          - customers: Customer-related metrics (segments, spend, regional)
+        data_type: text
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['orders', 'products', 'customers']
+
+      - name: metric_name
+        description: |
+          The name of the metric being measured. Common values include:
+          
+          **Order Metrics:**
+          - total_orders, completed_orders, cancelled_orders, pending_orders, refunded_orders
+          - total_revenue, completed_revenue, refunded_revenue, avg_order_value
+          - completion_rate_pct, cancellation_rate_pct
+          - order_count (for dimensional breakdowns)
+          
+          **Product Metrics:**
+          - unique_products_sold, total_line_items, total_quantity_sold, total_product_revenue
+          - category_revenue, category_products_sold
+          
+          **Customer Metrics:**
+          - active_customers, customers_with_completed_orders
+          - new_customers, premium_loyal_customers, core_customers, growing_customers
+          - total_customer_spend, avg_spend_per_customer, highest_customer_spend
+          - regional_customers
+        data_type: text
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+          - accepted_values:
+              values: 
+                # Order metrics - using actual metric names from config
+                - 'total_orders'
+                - 'completed_orders' 
+                - 'cancelled_orders'
+                - 'pending_orders'
+                - 'refunded_orders'
+                - 'items_added_orders'
+                - 'total_revenue'
+                - 'completed_revenue'
+                - 'refunded_revenue'
+                - 'avg_order_value'
+                - 'unique_customers'
+                - 'customers_with_completed_orders'
+                - 'completion_rate_pct'
+                - 'cancellation_rate_pct'
+                - 'single_item_orders'
+                - 'small_orders'
+                - 'medium_orders'
+                - 'large_orders'
+                - 'weekend_orders'
+                - 'weekday_orders'
+                - 'morning_orders'
+                - 'afternoon_orders'
+                - 'evening_orders'
+                - 'night_orders'
+                # Product metrics
+                - 'unique_products_sold'
+                - 'total_line_items'
+                - 'total_quantity_sold'
+                - 'total_product_revenue'
+                - 'clothing_revenue'
+                - 'accessories_revenue'
+                - 'footwear_revenue'
+                - 'intimates_revenue'
+                - 'activewear_revenue'
+                - 'clothing_products_sold'
+                - 'accessories_products_sold'
+                - 'footwear_products_sold'
+                - 'intimates_products_sold'
+                - 'activewear_products_sold'
+                # Customer metrics
+                - 'active_customers'
+                - 'new_customers'
+                - 'premium_loyal_customers'
+                - 'core_customers'
+                - 'growing_customers'
+                - 'total_customer_spend'
+                - 'avg_spend_per_customer'
+                - 'highest_customer_spend'
+                - 'na_customers'
+                - 'eu_customers'
+                - 'apac_customers'
+
+      - name: metric_value
+        description: "The numeric value of the metric"
+        data_type: numeric
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+
+      - name: dimension_type
+        description: |
+          The type of dimension for this metric breakdown. Values include:
+          - total: Overall/aggregate metrics
+          - status: Order status breakdowns
+          - revenue_type: Revenue categorizations  
+          - order_size: Order size categories
+          - timing: Weekend/weekday breakdowns
+          - time_of_day: Morning/afternoon/evening/night
+          - customer_type: Customer activity types
+          - rate_type: Percentage/rate metrics
+          - product_type: Product categorizations
+          - category: Product category breakdowns
+          - customer_segment: Customer segmentation
+          - spend_type: Customer spend categorizations
+          - region: Geographic breakdowns
+        data_type: text
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+          - accepted_values:
+              values: 
+                - 'base'
+                - 'status'
+                - 'revenue_type'
+                - 'customer_type'
+                - 'rate_type'
+                - 'order_size'
+                - 'timing'
+                - 'time_of_day'
+                - 'product_type'
+                - 'category'
+                - 'customer_activity'
+                - 'customer_segment'
+                - 'spend_type'
+                - 'region'
+
+      - name: dimension_value
+        description: |
+          The specific value within the dimension_type. Examples:
+          - For 'status': completed, cancelled, pending, refunded, items_added
+          - For 'category': clothing, accessories, footwear, intimates, activewear
+          - For 'customer_segment': new_customer, premium_loyal, core_customer, growing_customer
+          - For 'region': north_america, europe, asia_pacific
+          - For 'timing': weekend, weekday
+          - For 'time_of_day': morning, afternoon, evening, night
+        data_type: text
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+
+      - name: created_at
+        description: "Timestamp when this record was created"
+        data_type: timestamp
+
+    tests:
+      - unique:
+          column_name: "date_key || '-' || metric_name || '-' || dimension_type || '-' || dimension_value"
+          config:
+            error_if: ">0"
+            warn_if: ">0"

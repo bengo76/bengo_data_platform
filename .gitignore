@@ -1,0 +1,8 @@
+.venv
+.env
+.zvl
+
+# dbt
+target/
+dbt_packages/
+logs/

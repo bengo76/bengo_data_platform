@@ -1,0 +1,413 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Comprehensive date dimension table covering all calendar dates from 2020-2027 with business intelligence attributes for time-based analysis and reporting"
+    columns:
+      - name: date_key
+        description: "Primary key in YYYYMMDD integer format for efficient joins and partitioning"
+        tests:
+          - unique
+          - not_null
+      - name: calendar_date
+        description: "Actual calendar date in DATE format - the natural date value"
+        tests:
+          - unique
+          - not_null
+      - name: year
+        description: "Four-digit calendar year (e.g., 2025)"
+        tests:
+          - not_null
+      - name: quarter
+        description: "Calendar quarter (1-4) within the year"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 4
+                inclusive: true
+      - name: month
+        description: "Calendar month number (1-12, where 1=January, 12=December)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 12
+                inclusive: true
+      - name: day
+        description: "Day of the month (1-31 depending on month)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 31
+                inclusive: true
+      - name: day_of_week
+        description: "Day of week as integer (0=Sunday, 1=Monday, ..., 6=Saturday)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 6
+                inclusive: true
+      - name: day_of_year
+        description: "Sequential day number within the year (1-366)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 366
+                inclusive: true
+      - name: week_of_year
+        description: "ISO week number within the year (1-53)"
+        tests:
+          - not_null
+      - name: year_text
+        description: "Year as text string (e.g., '2025')"
+        tests:
+          - not_null
+      - name: year_month
+        description: "Year-month in YYYY-MM format (e.g., '2025-11') for period grouping"
+        tests:
+          - not_null
+      - name: year_quarter
+        description: "Year-quarter in YYYY-QN format (e.g., '2025-Q4') for quarterly reporting"
+        tests:
+          - not_null
+      - name: month_name
+        description: "Full month name (e.g., 'January', 'February') for display purposes"
+        tests:
+          - not_null
+      - name: month_short_name
+        description: "Abbreviated month name (e.g., 'Jan', 'Feb') for compact display"
+        tests:
+          - not_null
+      - name: day_name
+        description: "Full day name (e.g., 'Monday', 'Tuesday') for display purposes"
+        tests:
+          - not_null
+      - name: day_short_name
+        description: "Abbreviated day name (e.g., 'Mon', 'Tue') for compact display"
+        tests:
+          - not_null
+      - name: is_weekday
+        description: "Boolean flag: true for Monday-Friday, false for Saturday-Sunday"
+        tests:
+          - not_null
+      - name: is_weekend
+        description: "Boolean flag: true for Saturday-Sunday, false for Monday-Friday"
+        tests:
+          - not_null
+      - name: is_first_day_of_month
+        description: "Boolean flag indicating if this is the first day of the month"
+        tests:
+          - not_null
+      - name: is_last_day_of_month
+        description: "Boolean flag indicating if this is the last day of the month"
+        tests:
+          - not_null
+      - name: is_first_day_of_quarter
+        description: "Boolean flag indicating if this is the first day of the quarter"
+        tests:
+          - not_null
+      - name: is_last_day_of_quarter
+        description: "Boolean flag indicating if this is the last day of the quarter"
+        tests:
+          - not_null
+      - name: is_first_day_of_year
+        description: "Boolean flag indicating if this is January 1st"
+        tests:
+          - not_null
+      - name: is_last_day_of_year
+        description: "Boolean flag indicating if this is December 31st"
+        tests:
+          - not_null
+      - name: relative_period
+        description: "Human-readable relative time description: Today, Yesterday, Last 7 Days, Last 30 Days, This Month, Last Month, This Year, Last Year, Other"
+        tests:
+          - not_null
+      - name: season
+        description: "Calendar season based on Northern Hemisphere: Winter (Dec-Feb), Spring (Mar-May), Summer (Jun-Aug), Fall (Sep-Nov)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Winter', 'Spring', 'Summer', 'Fall']
+
+  - name: dim_product
+    description: "Comprehensive product dimension with enhanced attributes, categorization, pricing analysis, and business intelligence features for product management and analytics"
+    columns:
+      - name: product_key
+        description: "Surrogate key for the product dimension - unique identifier for data warehouse joins"
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        description: "Natural key from source system - original product identifier"
+        tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: "Full product name as stored in source system"
+        tests:
+          - not_null
+      - name: category
+        description: "Specific product category (detailed classification within category group)"
+        tests:
+          - not_null
+      - name: price
+        description: "Current catalog/list price in base currency"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: created_at
+        description: "Timestamp when product was first created in source system"
+        tests:
+          - not_null
+      - name: product_year
+        description: "Year when product was created/launched"
+        tests:
+          - not_null
+      - name: product_month
+        description: "Month when product was created/launched (1-12)"
+        tests:
+          - not_null
+      - name: category_group
+        description: "High-level category grouping for business reporting and inventory management"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Clothing', 'Accessories', 'Footwear', 'Intimates', 'Activewear', 'Other']
+      - name: category_sort_order
+        description: "Numeric sort order for consistent category display (1=Clothing, 2=Accessories, etc.)"
+        tests:
+          - not_null
+      - name: seasonality
+        description: "Seasonal classification based on product name keywords: Winter, Spring, Summer, Fall, Year-Round"
+        tests:
+          - not_null
+      - name: collection_type
+        description: "Product collection classification based on name analysis: Classic, Premium, Limited, Seasonal, Other"
+        tests:
+          - not_null
+      - name: name_length
+        description: "Character length of product name (useful for display formatting)"
+        tests:
+          - not_null
+      - name: is_limited_edition
+        description: "Boolean flag indicating if product is limited edition based on name keywords"
+        tests:
+          - not_null
+      - name: is_premium_line
+        description: "Boolean flag indicating if product belongs to premium line based on name keywords"
+        tests:
+          - not_null
+      - name: is_classic_line
+        description: "Boolean flag indicating if product belongs to classic/core line based on name keywords"
+        tests:
+          - not_null
+      - name: is_active
+        description: "Boolean flag indicating if product is currently active/available for sale"
+        tests:
+          - not_null
+      - name: is_discontinued
+        description: "Boolean flag indicating if product has been discontinued"
+        tests:
+          - not_null
+      - name: price_tier
+        description: "Primary price tier classification for business analysis and reporting"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Budget', 'Mid-Range', 'Premium', 'Luxury']
+      - name: detailed_price_tier
+        description: "Granular price tier classification including Ultra-Premium segment for luxury analysis"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Budget', 'Mid-Range', 'Premium', 'Luxury', 'Ultra-Premium']
+      - name: price_decile
+        description: "Price decile ranking (1-10) across entire product catalog for relative positioning analysis"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 10
+                inclusive: true
+      - name: price_quartile
+        description: "Price quartile ranking (1-4) across entire product catalog where 4 = top 25% most expensive"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 4
+                inclusive: true
+      - name: category_position
+        description: "Price-based position within product category: Category Premium, Category Mid-Market, Category Budget"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Category Premium', 'Category Mid-Market', 'Category Budget']
+      - name: overall_price_position
+        description: "Overall price positioning classification: Top 10%, Top 25%, Above Median, Below Median, Bottom 25%"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Top 10%', 'Top 25%', 'Above Median', 'Below Median', 'Bottom 25%']
+      - name: dim_created_at
+        description: "Timestamp when this dimension record was created"
+        tests:
+          - not_null
+      - name: dim_updated_at
+        description: "Timestamp when this dimension record was last updated"
+        tests:
+          - not_null
+      - name: dim_version
+        description: "Version number for dimension record tracking"
+        tests:
+          - not_null
+
+  - name: dim_customer
+    description: "Comprehensive customer dimension with demographic data, geographic analysis, tenure segmentation, and behavioral classifications for customer relationship management and analytics"
+    columns:
+      - name: customer_key
+        description: "Surrogate key for the customer dimension - unique identifier for data warehouse joins"
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "Natural key from source system - original customer identifier"
+        tests:
+          - unique
+          - not_null
+      - name: customer_name
+        description: "Customer's full name as provided during registration"
+        tests:
+          - not_null
+      - name: email
+        description: "Customer's email address - primary contact method and unique identifier"
+        tests:
+          - unique
+          - not_null
+      - name: signup_date
+        description: "Date when customer first registered/signed up for account"
+        tests:
+          - not_null
+      - name: country
+        description: "Customer's country of residence for geographic analysis and compliance"
+        tests:
+          - not_null
+      - name: region
+        description: "Standardized geographic region classification for business analysis"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['North America', 'Europe', 'Asia Pacific', 'Other']
+      - name: region_code
+        description: "Abbreviated region code for compact display and filtering"
+        tests:
+          - not_null
+      - name: created_at
+        description: "Timestamp when customer record was created in source system"
+        tests:
+          - not_null
+      - name: customer_tenure_days
+        description: "Number of days since customer signup - key metric for tenure analysis (can be negative for future signup dates in test data)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -365
+                max_value: 10000
+                inclusive: true
+      - name: signup_year
+        description: "Year when customer signed up (extracted from signup_date)"
+        tests:
+          - not_null
+      - name: signup_month
+        description: "Month when customer signed up (1-12, extracted from signup_date)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 12
+                inclusive: true
+      - name: signup_day_of_week
+        description: "Day of week when customer signed up (0=Sunday, 6=Saturday)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 6
+                inclusive: true
+      - name: signup_timing
+        description: "Signup timing classification: Recent (≤30 days), Growing (≤90 days), Established (≤365 days), Veteran (>365 days)"
+        tests:
+          - not_null
+      - name: signup_season
+        description: "Season when customer signed up: Winter, Spring, Summer, Fall"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Winter', 'Spring', 'Summer', 'Fall']
+      - name: tenure_segment
+        description: "Customer tenure-based lifecycle segment for retention and engagement strategies"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Loyal (2+ years)', 'Established (1-2 years)', 'Regular (6-12 months)', 'Growing (3-6 months)', 'New (1-3 months)', 'Fresh (< 1 month)']
+      - name: tenure_quartile
+        description: "Customer tenure quartile (1-4) where 4 = top 25% longest tenure customers"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 4
+                inclusive: true
+      - name: customer_segment
+        description: "Strategic customer segment combining tenure and geographic factors for business prioritization"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Premium Loyal', 'Core Customer', 'Growing Customer', 'New Customer']
+      - name: is_current_customer
+        description: "Boolean flag indicating if customer is currently active (has activity in recent period)"
+        tests:
+          - not_null
+      - name: churn_risk_segment
+        description: "Customer churn risk assessment: High Risk (<30 days tenure), Medium Risk (<90 days), Low Risk (≥90 days)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['High Risk', 'Medium Risk', 'Low Risk']
+      - name: created_at_dim
+        description: "Timestamp when this dimension record was created"
+        tests:
+          - not_null
+      - name: updated_at_dim
+        description: "Timestamp when this dimension record was last updated"
+        tests:
+          - not_null

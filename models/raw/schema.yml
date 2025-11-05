@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: raw_customers
+    description: "Raw customer data extracted directly from source systems with minimal transformations - preserves original data structure for audit trails and data lineage validation"
+    columns:
+      - name: id
+        description: "Source system customer identifier - original primary key from CRM maintaining complete traceability to upstream systems for data validation and reconciliation"
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: "Customer email address as captured in source system - unmodified contact information for data quality assessment and customer communication workflows"
+        tests:
+          - unique
+          - not_null
+      - name: name
+        description: "Customer full name exactly as entered in source registration - raw customer data for identity verification and data standardization analysis"
+        tests:
+          - not_null
+      - name: signup_date
+        description: "Original customer registration timestamp from source system - foundation date for all temporal analysis and customer lifecycle calculations"
+        tests:
+          - not_null
+      - name: country
+        description: "Customer country as provided during registration - raw geographic data enabling data sovereignty compliance and regional analysis foundation"
+        tests:
+          - not_null
+
+  - name: raw_products
+    description: "Raw product catalog data directly from source inventory management system - unmodified product information maintaining complete fidelity to source of truth"
+    columns:
+      - name: id
+        description: "Source system product identifier - original catalog key enabling direct traceability to product management systems for inventory reconciliation and audit purposes"
+        tests:
+          - unique
+          - not_null
+      - name: name
+        description: "Product name exactly as defined in source catalog system - unmodified product title for brand consistency validation and catalog data quality assessment"
+        tests:
+          - not_null
+      - name: category
+        description: "Original product category classification from source system - raw taxonomy data enabling category standardization analysis and merchandising alignment"
+        tests:
+          - not_null
+      - name: price
+        description: "Product unit price as maintained in source pricing system - original price point for historical pricing analysis and promotional impact assessment"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+
+  - name: raw_orders
+    description: "Raw order transaction data extracted directly from order management system - complete order lifecycle history preserving all status transitions and timestamps"
+    columns:
+      - name: record_id
+        description: "Source system record identifier for each order status event - unique key maintaining audit trail integrity for compliance and operational analysis"
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Business order identifier appearing across multiple lifecycle records - original order key enabling customer service lookup and cross-system integration"
+        tests:
+          - not_null
+      - name: customer_id
+        description: "Source system customer identifier linking orders to customer records - raw foreign key relationship maintaining data lineage from transactional systems"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('raw_customers')
+                field: id
+      - name: status
+        description: "Order processing status as recorded in source order management system - unmodified status values enabling operational workflow analysis and system performance tracking"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['pending', 'completed', 'cancelled', 'refunded']
+
+  - name: raw_order_items
+    description: "Raw order line item data directly from source transaction system - unmodified item-level details preserving exact pricing and quantity as captured during purchase"
+    columns:
+      - name: id
+        description: "Source system line item identifier - original transaction key maintaining complete traceability to point-of-sale systems for financial reconciliation and audit"
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Source order identifier linking line items to parent order - raw relationship key enabling order reconstruction and transaction analysis"
+        tests:
+          - not_null
+      - name: product_id
+        description: "Source catalog product identifier for purchased item - original product key maintaining link to inventory systems for stock reconciliation and product analysis"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('raw_products')
+                field: id
+      - name: quantity
+        description: "Exact quantity purchased as recorded in source transaction - unmodified purchase volume for demand analysis and inventory planning validation"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                inclusive: true
+      - name: unit_price
+        description: "Actual unit price charged at time of purchase as recorded in source system - original pricing data for revenue validation and pricing strategy analysis"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false

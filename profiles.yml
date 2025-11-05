@@ -1,0 +1,15 @@
+edikted:
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DB_HOST') }}"
+      user: "{{ env_var('DB_USER') }}"
+      password: "{{ env_var('DB_PASSWORD') }}"
+      port: "{{ env_var('DB_PORT') | as_number }}"
+      dbname: "{{ env_var('DB_NAME') }}"
+      schema: "{{ env_var('DB_SCHEMA') }}"
+      threads: 10
+      keepalives_idle: 0
+      connect_timeout: 10
+      retries: 1
+  target: dev

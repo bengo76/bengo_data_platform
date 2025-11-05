@@ -1,0 +1,156 @@
+version: 2
+
+sources:
+  - name: data
+    description: Source data schema for edikted e-commerce platform
+    database: edikted
+    schema: data
+    
+    tables:
+      - name: source_customers
+        description: Customer master data with registration information
+        columns:
+          - name: id
+            description: Primary key for customers
+            tests:
+              - unique
+              - not_null
+          - name: email
+            description: Customer email address
+            tests:
+              - unique
+              - not_null
+          - name: name
+            description: Customer full name
+            tests:
+              - not_null
+          - name: signup_date
+            description: Date when customer signed up
+            tests:
+              - not_null
+          - name: country
+            description: Customer country
+            tests:
+              - not_null
+          - name: created_at
+            description: Timestamp when record was created
+            tests:
+              - not_null
+
+      - name: source_products
+        description: Product catalog with pricing and categorization
+        columns:
+          - name: id
+            description: Primary key for products
+            tests:
+              - unique
+              - not_null
+          - name: name
+            description: Product name
+            tests:
+              - not_null
+          - name: category
+            description: Product category
+            tests:
+              - not_null
+          - name: price
+            description: Product price in USD
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  arguments:
+                    min_value: 0
+                    inclusive: false
+          - name: created_at
+            description: Timestamp when product was created
+            tests:
+              - not_null
+
+      - name: source_orders
+        description: Order lifecycle tracking with multiple records per order
+        columns:
+          - name: record_id
+            description: Primary key for order records
+            tests:
+              - unique
+              - not_null
+          - name: id
+            description: Order ID (can have multiple records for lifecycle tracking)
+            tests:
+              - not_null
+          - name: customer_id
+            description: Foreign key to customers
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('data', 'source_customers')
+                    field: id
+          - name: order_date
+            description: Original order creation date
+            tests:
+              - not_null
+          - name: status
+            description: Order status
+            tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values: ['pending', 'completed', 'cancelled', 'refunded']
+          - name: total_amount
+            description: Total order amount
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  arguments:
+                    min_value: 0
+                    inclusive: true
+          - name: created_at
+            description: Timestamp when this status record was created
+            tests:
+              - not_null
+
+      - name: source_order_items
+        description: Line items for orders with product details
+        columns:
+          - name: id
+            description: Primary key for order items
+            tests:
+              - unique
+              - not_null
+          - name: order_id
+            description: Foreign key to orders (order ID, not record_id)
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('data', 'source_orders')
+                    field: id
+          - name: product_id
+            description: Foreign key to products
+            tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('data', 'source_products')
+                    field: id
+          - name: quantity
+            description: Quantity of product ordered
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  arguments:
+                    min_value: 1
+                    inclusive: true
+          - name: unit_price
+            description: Price per unit at time of order
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  arguments:
+                    min_value: 0
+                    inclusive: false
+          - name: created_at
+            description: Timestamp when order item was created
+            tests:
+              - not_null

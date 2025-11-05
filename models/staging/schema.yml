@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Staging customer data with computed fields for tenure analysis and regional grouping - foundation layer for customer analytics and segmentation"
+    columns:
+      - name: id
+        description: "Unique customer identifier from source CRM system - primary key maintaining referential integrity across all customer-related analysis and joins"
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: "Customer email address serving as unique business identifier - critical for customer matching, communication tracking, and marketing campaign attribution"
+        tests:
+          - unique
+          - not_null
+      - name: name
+        description: "Customer full name as provided during registration - used for personalization, customer service, and data quality validation workflows"
+        tests:
+          - not_null
+      - name: signup_date
+        description: "Original customer registration date - foundation metric for tenure calculations, cohort analysis, and customer lifecycle tracking"
+        tests:
+          - not_null
+      - name: country
+        description: "Customer country of residence - enables geographic analysis, regional performance tracking, and compliance with data sovereignty requirements"
+        tests:
+          - not_null
+      - name: region
+        description: "Standardized regional grouping derived from country mapping - aggregates countries into business-relevant regions for strategic analysis and reporting"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['north america', 'europe', 'asia pacific', 'south america', 'africa', 'other']
+
+  - name: stg_products
+    description: "Staging product data with enhanced categorization and pricing intelligence - enriched foundation for product performance analysis and inventory optimization"
+    columns:
+      - name: id
+        description: "Unique product identifier from catalog management system - primary key enabling product performance tracking and cross-channel inventory reconciliation"
+        tests:
+          - unique
+          - not_null
+      - name: name
+        description: "Product display name from catalog - used for customer-facing applications, search functionality, and product performance reporting"
+        tests:
+          - not_null
+      - name: category
+        description: "Detailed product category classification - enables granular product grouping for category management, merchandising analysis, and targeted marketing campaigns"
+        tests:
+          - not_null
+      - name: price
+        description: "Current product unit price - foundation for revenue calculations, margin analysis, and competitive pricing strategies"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: price_tier
+        description: "Business classification of product price positioning - segments products for pricing analysis, customer targeting, and portfolio optimization strategies"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Budget', 'Mid-Range', 'Premium', 'Luxury']
+      - name: category_group
+        description: "High-level category aggregation for strategic analysis - consolidates detailed categories into manageable groups for executive reporting and business planning"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Clothing', 'Accessories', 'Footwear', 'Intimates', 'Activewear', 'Other']
+
+  - name: stg_orders
+    description: "Staging order data with comprehensive lifecycle tracking and status progression - captures complete order journey for operational and analytical insights"
+    columns:
+      - name: record_id
+        description: "Unique identifier for each order status record - enables tracking of order lifecycle changes and maintains audit trail for operational analysis"
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Business order identifier with multiple lifecycle records - core key for order tracking, customer service, and cross-system reconciliation"
+        tests:
+          - not_null
+      - name: customer_id
+        description: "Foreign key linking orders to customer records - enables customer journey analysis, repeat purchase tracking, and personalized experience delivery"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: id
+      - name: status
+        description: "Current order status indicating processing stage - critical for fulfillment tracking, revenue recognition, and customer communication workflows"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['pending', 'completed', 'cancelled', 'refunded']
+      - name: is_current_status
+        description: "Boolean flag identifying the latest status record for each order - enables efficient filtering to current order state without complex window functions"
+        tests:
+          - not_null
+
+  - name: stg_order_items
+    description: "Staging order line item data with pricing validation and quantity analysis - granular foundation for revenue attribution and product performance insights"
+    columns:
+      - name: id
+        description: "Unique line item identifier from order management system - primary key ensuring data integrity for item-level analysis and financial reconciliation"
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Foreign key establishing relationship to parent order - enables order-level aggregation and cross-reference with order lifecycle data"
+        tests:
+          - not_null
+      - name: product_id
+        description: "Foreign key linking line items to product catalog - critical for product performance analysis, inventory tracking, and cross-selling insights"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: id
+      - name: quantity
+        description: "Number of product units ordered in this line item - fundamental measure for inventory planning, demand forecasting, and volume-based pricing analysis"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                inclusive: true
+      - name: unit_price
+        description: "Price per individual product unit at time of purchase - captures historical pricing for margin analysis, promotional effectiveness, and price optimization"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: line_total
+        description: "Extended line amount calculated as quantity × unit_price - represents precise revenue contribution for accurate financial reporting and profitability analysis"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
