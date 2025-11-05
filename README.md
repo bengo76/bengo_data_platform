@@ -58,7 +58,7 @@ Raw Data → PostgreSQL → dbt Transformations → Analytics-Ready Tables
 ### Quick Start (Zero to Production)
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/bengo76/bengo_data_platform
 cd bengo_data_platform
 
 # Run automated setup (creates everything from scratch)
